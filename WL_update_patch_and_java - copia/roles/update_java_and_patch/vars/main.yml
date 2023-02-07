@@ -1,0 +1,21 @@
+---
+# vars file for WL_update_patch_and_java
+software_config_files: "/software_wl12/"
+java_dir: "/opt/"
+
+domain_root_directory: "/u01/Oracle/WL12/domainsAnsible/"
+domain_name: "mwidomain"
+
+oracle_home: "/u01/Oracle/WL12/Middleware/Oracle_Home"
+
+user: "proves"
+
+opatch_path: "{{ oracle_home }}/OPatch/"
+
+opatchRequiredVersion: "13.9.4.2.11"
+
+PathOpatchUpdate: "/home/{{ user }}/patch/"
+
+#$DOMAIN_HOME -name setDomainEnv.sh
+#find $DOMAIN_HOME -name setNMJavaHome.sh
+#find $DOMAIN_HOME -name nodemanager.properties

@@ -129,7 +129,7 @@
   tags: updatePatchWebLogic
   become: true
   become_user: "{{ user }}"
-  shell: source /home/{{ user }}/.bash_profile;cd /home/proves/patch/WLS_SPB_12.2.1.3.230118/tools/spbat/generic/SPBAT;./spbat.sh -phase precheck -oracle_home {{ oracle_home }}
+  shell: source /home/{{ user }}/.bash_profile;cd /home/{{ user }}/patch/WLS_SPB_12.2.1.3.230118/tools/spbat/generic/SPBAT;./spbat.sh -phase precheck -oracle_home {{ oracle_home }}
   register: precheck
 
 - name: Precheck result
@@ -142,7 +142,7 @@
   tags: updatePatchWebLogic
   become: true
   become_user: "{{ user }}"
-  shell: source /home/{{ user }}/.bash_profile;cd /home/proves/patch/WLS_SPB_12.2.1.3.230118/tools/spbat/generic/SPBAT;./spbat.sh -phase apply -oracle_home {{ oracle_home }}
+  shell: source /home/{{ user }}/.bash_profile;cd /home/{{ user }}/patch/WLS_SPB_12.2.1.3.230118/tools/spbat/generic/SPBAT;./spbat.sh -phase apply -oracle_home {{ oracle_home }}
   register: update
 
 - name: Precheck result

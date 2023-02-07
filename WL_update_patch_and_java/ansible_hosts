@@ -1,0 +1,12 @@
+[adminServer]
+master 
+
+[weblogic]
+master
+worker01
+worker02
+
+
+[nodeManageds]
+worker01
+worker02

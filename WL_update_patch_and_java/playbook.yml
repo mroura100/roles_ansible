@@ -1,0 +1,4 @@
+--- 
+- hosts: worker01
+  roles:
+    - update_java_and_patch

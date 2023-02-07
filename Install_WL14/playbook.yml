@@ -1,0 +1,9 @@
+--- 
+- name: Weblogic Infrastructure build
+  hosts: multi
+  #handlers:
+    #- include: handlers/handlers.yaml
+
+- hosts: app
+  roles:
+    - setup-weblogic

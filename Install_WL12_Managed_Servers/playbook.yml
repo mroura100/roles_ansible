@@ -1,0 +1,4 @@
+--- 
+- hosts: nodeManageds
+  roles:
+    - install-nodeManaged

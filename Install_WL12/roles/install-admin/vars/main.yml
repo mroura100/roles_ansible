@@ -1,0 +1,15 @@
+---
+# vars file for Install_WL12
+user: "proves"
+userPass: "proves"
+oracle_home: "/u01/Oracle/WL12/Middleware/Oracle_Home/"
+domain_root_directory: "/u01/Oracle/WL12/domainsAnsible/"
+
+domain_name: "mwidomain"
+domain_username: "weblogic"
+domain_password: "weblogic1"
+software_config_files: "/software_wl12/"
+java_dir: "/opt/"
+
+template_dir: "/tmp/domain.jar"
+

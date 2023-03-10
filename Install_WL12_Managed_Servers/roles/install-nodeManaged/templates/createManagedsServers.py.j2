@@ -1,0 +1,86 @@
+#create Machine
+connect('{{ domain_username }}','{{ domain_password }}','t3://{{groups['weblogic'][0]}}:7001')
+edit()
+startEdit()
+
+# Crear machine
+cd('/')
+list_machines=[]
+machines = cmo.getMachines()
+for m in machines:
+ print(m.getName())
+ list_machines.append(m.getName())
+
+
+print(list_machines)
+
+machineName='{{ ansible_hostname }}'
+if machineName not in list_machines:
+  machine = cmo.createUnixMachine('{{ ansible_hostname }}')  
+  print('Create machine result: ' + machine)    
+  machine.getNodeManager().setNMType('ssl')  
+  machine.getNodeManager().setListenAddress('{{ ansible_default_ipv4.address }}') 
+  validate()
+else:
+  print("la máquina ya existe")
+
+
+# Create cluster.
+cd('/')
+edit()
+startEdit()
+list_clusters=[]
+clusters = cmo.getClusters()
+for c in clusters:
+ print(c.getName())
+ list_clusters.append(c.getName())
+
+
+print(list_clusters)
+
+clusterName='{{ clusterName }}'
+if clusterName not in list_clusters:
+    print("not exist")
+    create('{{ clusterName }}','Cluster')
+    cd('/Clusters/' + '{{ clusterName }}')
+    cmo.setClusterMessagingMode('unicast')
+    cmo.setClusterBroadcastChannel('')
+    cmo.setClusterAddress('{{ ansible_default_ipv4.address }}')
+    validate()
+else:
+    print("Cluster "+ clusterName +" exists")
+
+
+
+
+# Crear ManagedServer
+cd('/')
+edit()
+startEdit()
+list_ManagedServers=[]
+managedServers = cmo.getServers()
+for s in managedServers:
+ print(s.getName())
+ list_ManagedServers.append(s.getName())
+
+print(list_ManagedServers)
+ManagedServerName='{{ ansible_hostname }}'
+
+if ManagedServerName not in list_ManagedServers:
+  create('{{ ansible_hostname }}','Server')
+  cd('Servers/{{ ansible_hostname }}')
+  cmo.setListenAddress('{{ ansible_default_ipv4.address }}')
+  cmo.setListenPort({{ nodeManagedNamePort }})
+  cmo.setMachine(getMBean('/Machines/' + '{{ ansible_hostname }}'))
+  cmo.setCluster(getMBean('/Clusters/' + '{{ clusterName }}'))
+  validate()
+else:
+  print("el managedServer ya existe")
+
+
+#Activate changes
+save()
+activate()
+
+
+

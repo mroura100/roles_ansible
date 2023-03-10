@@ -1,0 +1,28 @@
+#!/bin/bash
+#
+
+#Define DOMAIN_HOME
+export DOMAIN_HOME={{domain_root_directory}}{{domain_name}}
+echo "Domain Home is: " $DOMAIN_HOME
+
+#ADD_DOMAIN=1
+#if [ ! -f ${DOMAIN_HOME}/servers/AdminServer/security/boot.properties ]; then
+#    ADD_DOMAIN=0
+#fi
+
+# Create Domain only if 1st execution
+#if [ $ADD_DOMAIN -eq 0 ]; then
+   # Create an empty domain
+   echo "paso1"
+   source {{oracle_home}}wlserver/server/bin/setWLSEnv.sh
+   echo "paso2"
+   source /home/{{ user }}/.bash_profile;java weblogic.WLST -skipWLSModuleScanning {{software_config_files}}createManagedsServers.py
+   
+   ${DOMAIN_HOME}/bin/setDomainEnv.sh
+
+
+#fi
+
+# Start Admin Server 
+nohup ${DOMAIN_HOME}/bin/startNodeManager.sh  & 
+

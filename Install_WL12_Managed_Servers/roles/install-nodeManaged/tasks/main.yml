@@ -1,0 +1,185 @@
+---
+# tasks file for Install_WL12
+- name: hostname
+  tags: name
+  debug:
+    msg: "{{ansible_hostname}}"
+
+- name: Create a unix user group - {{ user }}
+  tags: group
+  become: true
+  become_user: root
+  group:
+    name: "{{ user }}"
+    state: present
+    gid: 7001
+
+- name: Create a unix user and map to {{ user }} group
+  tags: creaUser
+  become: true
+  become_user: root
+  user:
+    name: "{{ user }}"
+    password: "{{ userPass | password_hash('sha512') }}"
+    comment: User "{{ user }}"
+    uid: 7001
+    group: "{{ user }}"
+    state: present
+
+
+- name: Create ssh key
+  tags: sshKey
+  become: true
+  become_user: "{{ user }}"
+  shell: > 
+    ssh-keygen -q -b 2048 -t rsa -N "" -C "creating SSH" -f ~/.ssh/id_rsa
+    creates="~/.ssh/id_rsa"
+
+
+- name: Copy the key add to authorized_keys using Ansible module
+  tags: run
+  become: true
+  become_user: "{{ user }}"
+  shell: "sshpass -p {{ userPass }} ssh-copy-id -i /home/{{ user }}/.ssh/id_rsa.pub -o StrictHostKeyChecking=no {{ user }}@{{ item.dest }}" 
+  when: "{{ item.dest != ansible_hostname }}"
+  with_items: 
+    - { dest: "{{groups['all'][2]}}"} 
+    - { dest: "{{groups['all'][1]}}"}
+    - { dest: "{{groups['all'][0]}}"} 
+
+- name: Create a ORACLE_HOME  {{oracle_home}} directory
+  become: true
+  become_user: root
+  file:
+    dest: "{{oracle_home}}"
+    mode: 0755
+    owner: "{{ user }}"
+    group: "{{ user }}"
+    state: directory
+
+- name: Create a {{ software_config_files }} directory
+  become: true
+  become_user: root
+  file:
+    dest: "{{ software_config_files }}"
+    mode: 0755
+    owner: "{{ user }}"
+    group: "{{ user }}"
+    state: directory
+
+- name : Copy the JDK and Weblogic Installation files to {{ software_config_files }}
+  become: true
+  become_user: "{{ user }}"
+  copy:
+    src: "{{ item }}"
+    dest: "{{ software_config_files }}"
+    mode: 0755
+  with_items:
+    - "fmw_12.2.1.3.0_infrastructure.jar"
+    - "server-jre-8u181-linux-x64.tar.gz"
+    - "oraInst.loc"
+    - "install.file"
+    
+
+- name : unarchive java on {{ software_config_files }}
+  become: true
+  become_user: root
+  unarchive:
+    src: "{{ software_config_files }}server-jre-8u181-linux-x64.tar.gz"
+    dest: "{{ java_dir }}"
+
+- name: Create a symbolic link
+  file:
+    src: "{{ java_dir }}jdk1.8.0_181"
+    dest: "{{ java_dir }}jdk"
+    state: link
+
+
+- name : Validate Java
+  become: true
+  become_user: "{{ user }}"
+  shell: "source /home/{{ user }}/.bash_profile;java -version"
+  register: java_version
+
+- debug:
+    msg: " Java Version Found {{ java_version.stderr }}"
+
+- name: Install Weblogic
+  become: true
+  become_user: "{{ user }}"
+  register: weblogic_installation
+  shell: "source /home/{{ user }}/.bash_profile;java -jar {{ software_config_files }}/fmw*.jar -silent -invPtrLoc {{ software_config_files }}/oraInst.loc -responseFile {{ software_config_files }}/install.file -ignoreSysPrereqs -force -novalidation ORACLE_HOME={{oracle_home}} INSTALL_TYPE='WebLogic Server'"
+  args:
+    chdir: "{{ oracle_home }}"
+  when: "'java version \"1.8.0_181\"' in java_version.stderr"
+  failed_when: "'failed' in weblogic_installation.stderr"
+  changed_when: "'already installed' not in weblogic_installation.stdout"
+
+- debug:
+    msg: " Weblogic Installation {{ weblogic_installation }}"
+
+
+- name: Copy the Template files 
+  become: true
+  become_user: "{{ user }}"
+  tags: files
+  template:
+     src: "{{ item.src }}"
+     dest: "{{ software_config_files }}{{item.dest}}"
+     mode: 0755
+  with_items:
+    - { src: 'createManagedServers.sh.j2', dest: 'createManagedServers.sh' }
+    - { src: 'createManagedsServers.py.j2', dest: 'createManagedsServers.py' }
+    
+
+
+- name:  Synchronization using rsync protocol on delegate host {{groups['master'][0]}} (push)
+  become: true
+  become_user: "{{ user }}"
+  tags: synchronize
+  shell: "sshpass -p {{ userPass }} scp -o StrictHostKeyChecking=no {{groups['weblogic'][0]}}:/tmp/domain.jar /tmp/"
+    
+- name: Run the unpack operation
+  tags: unpack
+  become: true
+  become_user: "{{ user }}"
+  shell: "{{ oracle_home }}wlserver/common/bin/unpack.sh -domain={{domain_root_directory}}{{domain_name}} -template=/tmp/domain.jar"
+  register: unpack
+  when: ansible_hostname != "{{groups['weblogic'][0]}}"
+
+- debug:
+    msg: "{{ unpack }}"
+
+- name: Replace ListenAddress line in {{domain_root_directory}}{{domain_name}}/nodemanager/nodemanager.properties
+  become: true
+  become_user: "{{ user }}"
+  tags: replaceListen
+  replace:
+    path: "{{domain_root_directory}}{{domain_name}}/nodemanager/nodemanager.properties"
+    regexp: 'ListenAddress=.*'
+    replace: 'ListenAddress={{ ansible_default_ipv4.address }}'
+    owner: "{{ user }}"
+    group: "{{ user }}"
+  
+
+- name: Generate DemoIdentity.jks certificate
+  tags: certificate
+  become: true
+  become_user: "{{ user }}"
+  shell: "cd {{ domain_root_directory }}{{ domain_name }}/security;export CLASSPATH=$CLASSPATH:{{ oracle_home }}wlserver/server/lib/weblogic.jar;source /home/{{ user }}/.bash_profile;java utils.CertGen -keyfilepass DemoIdentityPassPhrase -certfile democert -keyfile demokey -strength 2048 -noskid;source /home/{{ user }}/.bash_profile;java utils.ImportPrivateKey -keystore DemoIdentity.jks -storepass DemoIdentityKeyStorePassPhrase -keyfile demokey.pem -keyfilepass DemoIdentityPassPhrase -certfile democert.pem -alias demoidentity"
+  register: certificate
+
+- debug:
+    msg: "{{ certificate }}"
+
+- name: Create Machine,Cluster and NodeManaged
+  tags: node
+  become: true
+  become_user: "{{ user }}"
+  shell:  "{{ software_config_files }}createManagedServers.sh"
+  register: nodeCreate
+  environment:
+          USER_MEM_ARGS: "-Djava.security.egd=file:/dev/./urandom" 
+
+- debug:
+    msg: "{{ nodeCreate.stdout_lines }}"

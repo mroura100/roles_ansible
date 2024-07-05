@@ -1,0 +1,159 @@
+---
+- name: Install setfacl and unzip on RedHat
+  become: true
+  yum:
+    name: ['acl', 'unzip', 'psmisc']
+    state: present
+    
+
+- name: Create the {{ibm_user}} user
+  become: true
+  become_user: root
+  user:
+    name: "{{ibm_user}}"
+
+- name: Create the {{ibm_root}} directory
+  become: true
+  become_user: root
+  file:
+    path: "{{ibm_root}}"
+    state: directory
+    owner: "{{ibm_user}}"
+    group: "{{ibm_user}}"
+    mode: 0755
+
+- name: Create the {{iim_path}} directory
+  become: true
+  become_user: root
+  file:
+    path: "{{iim_path}}"
+    state: directory
+    owner: "{{ibm_user}}"
+    group: "{{ibm_user}}"
+    mode: 0755
+
+- name: Create the {{ ihs_repo }} directory
+  become: true
+  become_user: root
+  file:
+    path: "{{ ihs_repo }}"
+    state: directory
+    owner: "{{ibm_user}}"
+    group: "{{ibm_user}}"
+    mode: 0755
+
+- name: Create the {{ plg_repo }} directory
+  become: true
+  become_user: root
+  file:
+    path: "{{ plg_repo }}"
+    state: directory
+    owner: "{{ibm_user}}"
+    group: "{{ibm_user}}"
+    mode: 0755
+
+
+- name: Create the {{ jdk_repo }} directory
+  become: true
+  become_user: root
+  file:
+    path: "{{ jdk_repo }}"
+    state: directory
+    owner: "{{ibm_user}}"
+    group: "{{ibm_user}}"
+    mode: 0755
+
+- name: Descarregem el instalation manager IIM.
+  get_url:
+    url: "http://192.168.1.110/was90/gtk.x86_64_1.8.9004.20190423_2015.zip"
+    dest: "{{ ibm_repo }}/gtk.x86_64_1.8.9004.20190423_2015.zip"
+
+- name: Descarreguem el IHS.
+  get_url:
+    url: "http://192.168.1.110/was90/was.repo.90501.ihs.zip"
+    dest: "{{ ibm_repo }}/was.repo.90501.ihs.zip"
+
+- name: Descarreguem els Plugins.
+  get_url:
+    url: "http://192.168.1.110/was90/was.repo.90501.plugins.zip"
+    dest: "{{ ibm_repo }}/was.repo.90501.plugins.zip"
+
+- name: Descarregem el JAVA.
+  get_url:
+    url: "http://192.168.1.110/was90/sdk.repo.8035.java8.linux.zip"
+    dest: "{{ ibm_repo }}/sdk.repo.8035.java8.linux.zip"
+
+- name: Descomprimim el instalation manager IIM
+  become: true
+  unarchive:
+    src: "{{ ibm_repo }}/gtk.x86_64_1.8.9004.20190423_2015.zip"
+    dest: "{{ iim_path }}"
+    remote_src: yes
+    group: "{{ibm_user}}"
+    owner: "{{ibm_user}}"
+
+- name: Descomprimim el IHS
+  become: true
+  unarchive:
+    src: "{{ ibm_repo }}/was.repo.90501.ihs.zip"
+    dest: "{{ ihs_repo }}"
+    remote_src: yes
+    group: "{{ibm_user}}"
+    owner: "{{ibm_user}}"
+
+- name: Descomprimim el jdk repo
+  become: true
+  unarchive:
+    src: "{{ ibm_repo }}/sdk.repo.8035.java8.linux.zip"
+    dest: "{{ jdk_repo }}"
+    remote_src: yes
+    group: "{{ibm_user}}"
+    owner: "{{ibm_user}}" 
+
+- name: Descomprimim els plugins
+  become: true
+  unarchive:
+    src: "{{ ibm_repo }}/was.repo.90501.plugins.zip"
+    dest: "{{ plg_repo }}"
+    remote_src: yes
+    group: "{{ibm_user}}"
+    owner: "{{ibm_user}}" 
+
+
+
+- name: Install IHS
+  become: true
+  become_user: "{{ was_user }}"
+  command: >
+    "{{ iim_path }}/tools/imcl"
+    "install" "{{ ihs_imcl_package_name }}"
+    "{{ jdk_imcl_package_name }}"
+    "-repositories"
+    "{{ ihs_repo }},{{ jdk_repo }}"
+    "-installationDirectory"
+    "{{ ihs_path }}"
+    "-sharedResourcesDirectory"
+    "{{ ibm_shared_path }}"
+    "-accessRights"
+    "nonAdmin"
+    "-acceptLicense"
+
+- name: Install Plugins
+  become: true
+  become_user: "{{ was_user }}"
+  command: >
+    "{{ iim_path }}/tools/imcl"
+    "install" "{{ plg_imcl_package_name }}"
+    "{{ jdk_imcl_package_name }}"
+    "-repositories"
+    "{{ plg_repo }},{{ jdk_repo }}"
+    "-installationDirectory"
+    "{{ plg_path }}"
+    "-sharedResourcesDirectory"
+    "{{ ibm_shared_path }}"
+    "-accessRights"
+    "nonAdmin"
+    "-acceptLicense"
+
+
+

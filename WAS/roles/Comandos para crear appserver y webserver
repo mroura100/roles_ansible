@@ -1,1 +1,18 @@
+/opt/IBM/WAS90/AppServer/bin/wsadmin.sh -lang jython
 
+---Borrar server que se crea por defecto
+AdminTask.deleteServer('[-serverName server1 -nodeName lwast9]')
+AdminConfig.save()
+
+
+---Crear appserver
+/opt/IBM/WAS90/AppServer/bin/wsadmin.sh
+AdminTask.createApplicationServer('lwast9', '[-name TEST03 -templateName default -genUniquePorts true]')
+AdminConfig.save()
+
+
+
+--- Crear webserver
+/opt/IBM/WAS90/AppServer/bin/wsadmin.sh
+AdminTask.createWebServer('lwast9', '-name webserver1 -serverConfig [ -webPort 8001 -webInstallRoot /opt/IBM/IHS90/HTTPServer/ -pluginInstallRoot /opt/IBM/PLG90/ -configurationFile /opt/IBM/IHS90/HTTPServer/conf/httpd.conf.instanciaWeb1]')
+AdminConfig.save()

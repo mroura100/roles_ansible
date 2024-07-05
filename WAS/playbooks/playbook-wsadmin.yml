@@ -1,9 +1,0 @@
----
-- name: WebSphere Application Server install & configure playbook example
-  hosts: was
-  vars:
-    was_user: was
-    was_root: /opt/IBM/WAS90
-
-  roles:
-    - { role: wsadmin, jython_command: "AdminConfig.list('Cell')" }

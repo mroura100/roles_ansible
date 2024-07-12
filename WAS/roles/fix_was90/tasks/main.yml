@@ -1,0 +1,46 @@
+---
+#-name stop all was services
+#- name: Create was service (stop all)
+
+- name: Create the {{ fix_was_repo }} directory
+  become: true
+  #become_user: root
+  file:
+    path: "{{ fix_was_repo }}"
+    state: directory
+    owner: "{{ibm_user}}"
+    group: "{{ibm_user}}"
+    mode: 0755
+
+
+- name: Descarreguem el fixpack del WAS9.
+  get_url:
+    url: "http://192.168.1.110/fixpack_WAS90/WAS9.0.5.17/9.0.5-WS-WAS-FP017.zip"
+    dest: "{{ ibm_repo }}/9.0.5-WS-WAS-FP017.zip"
+
+
+
+- name: Descomprimim el was repo
+  become: true
+  unarchive:
+    src: "{{ ibm_repo }}/9.0.5-WS-WAS-FP017.zip"
+    dest: "{{ fix_was_repo }}"
+    remote_src: yes
+    group: "{{ibm_user}}"
+    owner: "{{ibm_user}}"
+
+
+
+
+- name: Uptade WAS
+  become: true
+  #become_user: "{{ was_user }}"
+  shell: "runuser -l {{ibm_user}} -c '{{ iim_path }}/tools/imcl install {{ fix_was_imcl_package_name }} -repositories {{ fix_was_repo }} -installationDirectory {{ was_path }} -sharedResourcesDirectory {{ ibm_shared_path }} -accessRights nonAdmin -acceptLicense'"
+
+
+
+
+  
+
+
+

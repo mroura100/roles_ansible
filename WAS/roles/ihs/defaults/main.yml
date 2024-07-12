@@ -2,7 +2,7 @@
 ibm_user: was
 ibm_root: "/opt/IBM"
 ibm_repo: "/tmp"
-ibm_shared_path: "{{ ibm_root }}/Shared"
+ibm_shared_path: "{{ ibm_root }}/IMShared"
 ihs_repo: "{{ ibm_repo }}/IHS"
 plg_repo: "{{ ibm_repo }}/PLG"
 jdk_repo: "{{ ibm_repo }}/JDK"
@@ -13,6 +13,11 @@ ihs_group: "{{ ibm_user }}"
 ihs_mode: "{{ ibm_mode }}"
 ihs_path: "{{ibm_root}}/IHS90/HTTPServer"
 plg_path: "{{ibm_root}}/PLG90"
+startStop_path: "/serveis/scripts/{{ entorn }}/system/startstop"
+web_server: "{{ web_server_name }}" 
+was_user: "{{ ibm_user }}"
+virtual_host: "{{ vhost }}"
+entorn: "{{ ent }}"
 
 
 ihs_imcl_package_name: "com.ibm.websphere.IHS.v90_9.0.5001.20190828_0616"

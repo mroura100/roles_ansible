@@ -1,0 +1,14 @@
+---
+ibm_user: was
+ibm_root: "/opt/IBM"
+ibm_repo: "/tmp"
+ibm_shared_path: "{{ ibm_root }}/IMShared"
+fix_was_repo: "{{ ibm_repo }}/FIX_WAS"
+was_user: "{{ ibm_user }}"
+was_group: "{{ was_user }}"
+was_path: "{{ibm_root}}/WAS90/AppServer"
+iim_path: "{{ ibm_root }}/InstallationManager"
+
+
+fix_was_imcl_package_name: "com.ibm.websphere.ND.v90_9.0.5017.20230818_1035"
+

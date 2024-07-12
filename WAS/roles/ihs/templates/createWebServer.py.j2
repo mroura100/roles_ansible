@@ -1,0 +1,2 @@
+AdminTask.createWebServer('{{ ansible_hostname }}', '-name {{ web_server }} -serverConfig [ -webPort 8001 -webInstallRoot {{ ihs_path }} -pluginInstallRoot /opt/IBM/PLG90/ -configurationFile {{ ihs_path }}/conf/httpd.conf.{{ web_server }}]')
+AdminConfig.save()

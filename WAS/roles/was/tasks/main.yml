@@ -2,19 +2,19 @@
 - name: Install setfacl and unzip on RedHat
   become: true
   yum:
-    name: ['acl', 'unzip', 'psmisc']
+    name: ['acl', 'unzip', 'psmisc','expect']
     state: present
     
 
 - name: Create the {{ibm_user}} user
   become: true
-  become_user: root
+  #become_user: root
   user:
     name: "{{ibm_user}}"
 
 - name: Create the {{ibm_root}} directory
   become: true
-  become_user: root
+  #become_user: root
   file:
     path: "{{ibm_root}}"
     state: directory
@@ -24,7 +24,7 @@
 
 - name: Create the {{iim_path}} directory
   become: true
-  become_user: root
+  #become_user: root
   file:
     path: "{{iim_path}}"
     state: directory
@@ -34,7 +34,7 @@
 
 - name: Create the {{ was_repo }} directory
   become: true
-  become_user: root
+  #become_user: root
   file:
     path: "{{ was_repo }}"
     state: directory
@@ -44,7 +44,7 @@
 
 - name: Create the {{ jdk_repo }} directory
   become: true
-  become_user: root
+  #become_user: root
   file:
     path: "{{ jdk_repo }}"
     state: directory
@@ -97,57 +97,163 @@
 
 - name: Run IIM at {{ iim_path }} to install WAS with JDK at {{ was_path }}
   become: true
-  become_user: "{{ was_user }}"
-  command: >
-    "{{ iim_path }}/tools/imcl"
-    "install" "{{ was_imcl_package_name }}"
-    "{{ jdk_imcl_package_name }}"
-    "-repositories"
-    "{{ was_repo }},{{ jdk_repo }}"
-    "-installationDirectory"
-    "{{ was_path }}"
-    "-sharedResourcesDirectory"
-    "{{ ibm_shared_path }}"
-    "-accessRights"
-    "nonAdmin"
-    "-acceptLicense"
-
+  #become_user: "{{ was_user }}"
+  shell: "runuser -l {{ibm_user}} -c '{{ iim_path }}/tools/imcl install {{ was_imcl_package_name }} {{ jdk_imcl_package_name }} -repositories {{ was_repo }},{{ jdk_repo }} -installationDirectory {{ was_path }} -sharedResourcesDirectory {{ ibm_shared_path }} -accessRights nonAdmin -acceptLicense'"
+    
 - name: Create profile DMGR
   become: true
-  become_user: "{{ was_user }}"
-  command: >
-    {{ was_path }}/bin/manageprofiles.sh
-    -create
-    -profileName dmgr0
-    -profilePath '{{ was_profiles_path }}/dmgr'
-    -templatePath '{{ was_path }}/profileTemplates/management'
-    -serverType DEPLOYMENT_MANAGER
-    -nodeName dmgr0
-    -cellName cellgc0
-    -hostname {{ ansible_hostname }} 
+  #become_user: "{{ was_user }}"
+  shell: "runuser -l {{ibm_user}} -c '{{ was_path }}/bin/manageprofiles.sh  -create -profileName dmgr -profilePath {{ was_profiles_path }}/dmgr -templatePath {{ was_path }}/profileTemplates/management -serverType DEPLOYMENT_MANAGER -nodeName dmgr -cellName cellgc0  -hostname {{ ansible_hostname }}'"
 
-- name: Starting DMGR
-  become: true
-  become_user: "{{ was_user }}"
-  command: "{{ was_profiles_path }}/dmgr/bin/startManager.sh"
+
+#- name: Create profile NODE
+ # become: true
+  #become_user: "{{ was_user }}"
+ # command: >
+#    {{ was_path }}/bin/manageprofiles.sh
+#    -create
+#    -templatePath '{{ was_path }}/profileTemplates/default'
+#    -profile_name {{ ansible_hostname }}
+#    -profilePath '{{ was_profiles_path }}/{{ ansible_hostname }}'
+#    -nodeName {{ ansible_hostname }}
+#    -cellName cellgc1
+#    -hostname {{ ansible_hostname }}
+
+
+##així funcioan bé
+#- name: Create profile NODE
+#  become: true
+  #become_user: "{{ was_user }}"
+#  command: >
+#    /opt/IBM/WAS90/AppServer/bin/manageprofiles.sh
+#    -create
+#    -templatePath /opt/IBM/WAS90/AppServer/profileTemplates/default
+#    -profileName lwast9
+#    -profilePath /opt/IBM/WAS90/profiles/lwast9
+#    -nodeName lwast9
+#    -cellName cellgc1
+#    -hostname lwast9
 
 - name: Create profile NODE
   become: true
-  become_user: "{{ was_user }}"
-  command: >
-    {{ was_path }}/bin/manageprofiles.sh
-    -create
-    -profile_name {{ ansible_hostname }}
-    -profilePath '{{ was_profiles_path }}/{{ ansible_hostname }}'
-    -templatePath '{{ was_path }}/profileTemplates/default'
-    -nodeName {{ ansible_hostname }}
-    -cellName cellgc1
-    -hostname {{ ansible_hostname }}
+  #become_user: "{{ was_user }}"
+  shell: "runuser -l {{ibm_user}} -c '{{ was_path }}/bin/manageprofiles.sh -create -templatePath {{ was_path }}/profileTemplates/default -profileName {{ ansible_hostname }} -profilePath {{ was_profiles_path }}/{{ ansible_hostname }} -nodeName {{ ansible_hostname }} -cellName cellgc1 -hostname {{ ansible_hostname }}'"
+    
+
+- name: Create the startStop scripts directory
+  become: true
+  #become_user: root
+  file:
+    path: "{{ startStop_path }}/was90/"
+    state: directory
+    owner: "{{ibm_user}}"
+    group: "root"
+    mode: 0770
+
+- name: Create logs path
+  become: true
+  file:
+    path: "/var/log/{{ entorn }}/w{{virtual_host}}/webshpere90/{{ web_server }}"
+    state: directory
+    owner: "{{ibm_user}}"
+    group: "{{ibm_user}}"
+    mode: 0755
+
+- name: Change owner and group to was
+  become: true
+  ansible.builtin.file:
+    path: "{{ ibm_root }}"
+    state: directory
+    recurse: yes
+    owner: "{{ibm_user}}"
+    group: "{{ibm_user}}"
+
+- name: Starting DMGR
+  become: true
+  #become_user: "{{ was_user }}"
+  command: "runuser -l {{ibm_user}} -c '{{ was_profiles_path }}/dmgr/bin/startManager.sh'"
+
 
 - name: Federar Nodo
   become: true
-  become_user: "{{ was_user }}"
-  shell: "{{ was_profiles_path }}/{{ ansible_hostname }}/bin/addNode.sh {{ ansible_hostname }}"
+  #become_user: "{{ was_user }}"
+  shell: "runuser -l {{ibm_user}} -c '{{ was_profiles_path }}/{{ ansible_hostname }}/bin/addNode.sh {{ ansible_hostname }}'"
+
+
+- name: Copy script to {{ startStop_path }}/was90/
+  become: true
+  copy:
+    src: was.generic.sh
+    dest: "{{ startStop_path }}/was90/"
+    owner: "{{ibm_user}}"
+    group: "root"
+    mode: 0770
+
+
+- name: Create symbolics links to execute scripts
+  become: true
+  file:
+    src: "{{ startStop_path }}/was90/was.generic.sh"
+    dest: '{{ item.dest }}'
+    state: link
+  loop:
+    - { dest: "{{ startStop_path }}/was90/dmgr.start.sh"}
+    - { dest: "{{ startStop_path }}/was90/dmgr.status.sh"}
+    - { dest: "{{ startStop_path }}/was90/dmgr.stop.sh"}
+    - { dest: "{{ startStop_path }}/was90/nodeagent.start.sh"}
+    - { dest: "{{ startStop_path }}/was90/nodeagent.status.sh"}
+    - { dest: "{{ startStop_path }}/was90/nodeagent.stop.sh"}
+    - { dest: "{{ startStop_path }}/was90/{{ instance }}.start.sh"}
+    - { dest: "{{ startStop_path }}/was90/{{ instance }}.stop.sh"}
+    - { dest: "{{ startStop_path }}/was90/{{ instance }}.status.sh"}
+
+- name: Copy the Template files to create instances
+  become: true
+  template:
+     src: "{{ item.src }}"
+     dest: "{{ ibm_repo }}/{{item.dest}}"
+     owner: "{{ibm_user}}"
+     group: "{{ibm_user}}"
+     mode: 0755
+  with_items:
+    - { src: 'createAppServer.py.j2', dest: 'createAppServer.py' }
+    - { src: 'createAppServer.sh.j2', dest: 'createAppServer.sh' }
+
+- name: Create AppServer
+  become: true
+  shell:  "runuser -l {{ibm_user}} -c '{{ ibm_repo }}/createAppServer.sh'"
+
+- name: Change owner and group to was
+  become: true
+  ansible.builtin.file:
+    path: "{{ ibm_root }}"
+    state: directory
+    recurse: yes
+    owner: "{{ibm_user}}"
+    group: "{{ibm_user}}"
+
+- name: Delete the {{ was_repo }} directory
+  become: true
+  #become_user: root
+  file:
+    path: "{{ was_repo }}"
+    state: absent
+    owner: "{{ibm_user}}"
+    group: "{{ibm_user}}"
+    mode: 0755
+
+- name: Delete the {{ jdk_repo }} directory
+  become: true
+  #become_user: root
+  file:
+    path: "{{ jdk_repo }}"
+    state: absent
+    owner: "{{ibm_user}}"
+    group: "{{ibm_user}}"
+    mode: 0755
+
+
+
 
 
 

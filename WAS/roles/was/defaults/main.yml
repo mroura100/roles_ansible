@@ -2,7 +2,7 @@
 ibm_user: was
 ibm_root: "/opt/IBM"
 ibm_repo: "/tmp"
-ibm_shared_path: "{{ ibm_root }}/Shared"
+ibm_shared_path: "{{ ibm_root }}/IMShared"
 was_repo: "{{ ibm_repo }}/WAS"
 jdk_repo: "{{ ibm_repo }}/JDK"
 iim_tmp: "{{ ibm_root }}/tmp"
@@ -16,6 +16,12 @@ was_version: '9.0'
 #was_mode: "{{ ibm_mode }}"
 was_path: "{{ibm_root}}/WAS90/AppServer"
 was_profiles_path: "{{ibm_root}}/WAS90/profiles"
+entorn: "{{ ent }}"
+startStop_path: "/serveis/scripts/{{ entorn }}/system/startstop"
+instance: "{{ instance_name }}" 
+virtual_host: "{{ vhost }}"
+
+
 
 #was_type: "BASE"
 #was_imcl_package_regex: "com.ibm.websphere.{{ was_type }}.v[0-9]+_([0-9]+.[0-9]+.[0-9]+.[0-9]+)"

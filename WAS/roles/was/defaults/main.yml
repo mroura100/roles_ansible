@@ -19,7 +19,7 @@ was_profiles_path: "{{ibm_root}}/WAS90/profiles"
 entorn: "{{ ent }}"
 startStop_path: "/serveis/scripts/{{ entorn }}/system/startstop"
 instance: "{{ instance_name }}" 
-virtual_host: "{{ vhost }}"
+service: {{ serv }}
 
 
 

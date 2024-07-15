@@ -912,7 +912,7 @@ MaxRequestsPerChild  0
 
 LoadModule was_ap22_module /opt/IBM/PLG90/bin/64bits/mod_was_ap22_http.so
 LoadModule was_ap24_module /opt/IBM/PLG90/bin/64bits/mod_was_ap24_http.so
-WebSpherePluginConfig {{ihs_path}}/plugins/config/a11sat02/plugin-cfg.xml
+WebSpherePluginConfig {{ihs_path}}/plugins/config/{{ web_server }}/plugin-cfg.xml
 
 ##Solucionar vulnerabilitat MSS-OAR-E01-2016:3382.1
 #RequestHeader unset Proxy earl

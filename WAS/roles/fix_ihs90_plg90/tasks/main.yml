@@ -6,24 +6,26 @@
   become: true
   #become_user: root
   file:
-    path: "{{ fix_ihs_repo }}"
+    path: "{{ fix_ihsplg_repo }}"
     state: directory
     owner: "{{ibm_user}}"
     group: "{{ibm_user}}"
     mode: 0755
 
-- name: Create the {{ fix_plg_repo }} directory
+- name: Create the {{ jdk_repo }} directory
   become: true
-  #become_user: root
+  become_user: root
   file:
-    path: "{{ fix_plg_repo }}"
+    path: "{{ jdk_repo }}"
     state: directory
     owner: "{{ibm_user}}"
     group: "{{ibm_user}}"
     mode: 0755
 
 
-- name: Descarreguem el fixpack del WAS9.
+
+
+- name: Descarreguem el fixpack del IHS i PLG.
   get_url:
     url: "http://192.168.1.110/fixpack_WAS90/IHSPLG9.0.5.17/9.0.5-WS-IHSPLG-FP017.zip"
     dest: "{{ ibm_repo }}/9.0.5-WS-IHSPLG-FP017.zip"
@@ -39,10 +41,30 @@
     group: "{{ibm_user}}"
     owner: "{{ibm_user}}"
 
+- name: Descarregem el JAVA.
+  get_url:
+    url: "http://192.168.1.110/was90/sdk.repo.8035.java8.linux.zip"
+    dest: "{{ ibm_repo }}/sdk.repo.8035.java8.linux.zip"
 
 
-- name: Uptade IHS y PLG
+- name: Descomprimim el jdk repo
+  become: true
+  unarchive:
+    src: "{{ ibm_repo }}/sdk.repo.8035.java8.linux.zip"
+    dest: "{{ jdk_repo }}"
+    remote_src: yes
+    group: "{{ibm_user}}"
+    owner: "{{ibm_user}}" 
+
+
+
+
+- name: Uptade IHS
   become: true
   #become_user: "{{ was_user }}"
-  shell: "runuser -l {{ibm_user}} -c '{{ iim_path }}/tools/imcl install {{ fix_was_imcl_package_name }} -repositories {{ fix_was_repo }} -installationDirectory {{ was_path }} -sharedResourcesDirectory {{ ibm_shared_path }} -accessRights nonAdmin -acceptLicense'"
+  shell: "runuser -l {{ibm_user}} -c '{{ iim_path }}/tools/imcl install {{ fix_ihs_imcl_package_name }} {{ jdk_imcl_package_name }} -repositories {{ fix_ihsplg_repo }},{{ fix_jdk_repo }} -installationDirectory {{ ihs_path }} -sharedResourcesDirectory {{ ibm_shared_path }} -accessRights nonAdmin -acceptLicense'"
 
+- name: PLG
+  become: true
+  #become_user: "{{ was_user }}"
+  shell: "runuser -l {{ibm_user}} -c '{{ iim_path }}/tools/imcl install  {{ fix_plg_imcl_package_name }} {{ jdk_imcl_package_name }} -repositories {{ fix_ihsplg_repo }},{{ fix_jdk_repo }} -installationDirectory {{ plg_path }} -sharedResourcesDirectory {{ ibm_shared_path }} -accessRights nonAdmin -acceptLicense'"

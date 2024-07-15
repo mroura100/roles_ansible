@@ -146,16 +146,36 @@
     - { src: 'createWebServer.sh.j2', dest: 'createWebServer.sh' }
     - { src: 'httpd.conf.j2', dest: 'httpd.conf.{{ web_server }}' }
 
-- name: Copy the Template files to create a webserver
+- name: Copy conf files to config folder
   become: true
   copy:
     src: "{{ ibm_repo }}/httpd.conf.{{ web_server }}"
-    dest: "{{ ihs_path }}/httpd.conf.{{ web_server }}"
+    dest: "{{ ihs_path }}/conf/httpd.conf.{{ web_server }}"
     remote_src: true
     owner: "{{ibm_user}}"
     group: "{{ibm_user}}"
-    mode: 
-    
+    mode: 0755 
+
+
+
+- name: Create plugin path
+  become: true
+  file:
+    path: "{{ ihs_path }}/plugins/config/{{ web_server }}"
+    state: directory
+    owner: "{{ibm_user}}"
+    group: "{{ibm_user}}"
+    mode: 0755
+
+- name: Create plugin-cfg.xml file
+  become: true
+  file:
+    path: "{{ ihs_path }}/plugins/config/{{ web_server }}/plugin-cfg.xml"
+    state: touch
+    owner: "{{ibm_user}}"
+    group: "{{ibm_user}}"
+    mode: 0755
+
 - name: Create logs path
   become: true
   file:

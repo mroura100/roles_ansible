@@ -35,7 +35,7 @@
 - name: Uptade WAS
   become: true
   #become_user: "{{ was_user }}"
-  shell: "runuser -l {{ibm_user}} -c '{{ iim_path }}/tools/imcl install {{ fix_was_imcl_package_name }} -repositories {{ fix_was_repo }} -installationDirectory {{ was_path }} -sharedResourcesDirectory {{ ibm_shared_path }} -accessRights nonAdmin -acceptLicense'"
+  shell: "runuser -l {{ibm_user}} -c '{{ iim_path }}/tools/imcl install {{ fix_was_imcl_package_name }} -repositories {{ fix_was_repo }} -sharedResourcesDirectory {{ ibm_shared_path }} -accessRights nonAdmin -acceptLicense'"
 
 
 

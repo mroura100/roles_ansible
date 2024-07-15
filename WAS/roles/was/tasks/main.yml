@@ -153,7 +153,7 @@
 - name: Create logs path
   become: true
   file:
-    path: "/var/log/{{ entorn }}/w{{virtual_host}}/webshpere90/{{ web_server }}"
+    path: "/var/log/{{ entorn }}/w{{service}}/webshpere90/{{ web_server }}"
     state: directory
     owner: "{{ibm_user}}"
     group: "{{ibm_user}}"
